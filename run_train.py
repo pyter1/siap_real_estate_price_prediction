@@ -3,7 +3,8 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
-
+import matplotlib
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -143,7 +144,11 @@ def main() -> None:
 
     # SHAP on a sample
     sample = df_clean.drop(columns=[schema.target_col]).sample(n=min(500, len(df_clean)), random_state=train_cfg.random_seed)
-    shap_summary_plot(artifacts.xgb_pipeline, sample, str(paths.reports / "shap_summary_xgb.png"), max_display=30)
+    try:
+        shap_summary_plot(artifacts.xgb_pipeline, sample, str(paths.reports / "shap_summary_xgb.png"), max_display=30)
+    except Exception:
+        # SHAP is optional and can fail depending on installed versions; skip without stopping training.
+        pass
 
     print("Training done.")
     print(f"Processed data: {processed_path}")

@@ -1,10 +1,11 @@
 pandas
 numpy
-scikit-learn
+scikit-learn==1.5.2
+category-encoders==2.6.4
 xgboost
-category-encoders
 geopy
 requests
 joblib
 matplotlib
 shap
+scipy

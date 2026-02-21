@@ -6,7 +6,10 @@ from typing import List, Optional, Tuple
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import shap
+try:
+    import shap
+except Exception:  # pragma: no cover
+    shap = None  # type: ignore
 from sklearn.pipeline import Pipeline
 
 
@@ -59,10 +62,15 @@ def shap_summary_plot(
     out_path: str,
     max_display: int = 30,
 ) -> None:
+    if shap is None:
+        # SHAP is optional; skip if not installed.
+        return
     preprocess = pipeline.named_steps["preprocess"]
     model = pipeline.named_steps["model"]
 
     X_trans = preprocess.transform(X_sample)
+    if hasattr(X_trans, "toarray"):
+        X_trans = X_trans.toarray()
     names = _get_feature_names(pipeline)
     if len(names) == 0:
         names = [f"f{i}" for i in range(X_trans.shape[1])]

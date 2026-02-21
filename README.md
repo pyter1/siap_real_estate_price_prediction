@@ -39,3 +39,7 @@ Optional:
 To skip geocoding:
 
    python run_predict.py --input data/raw/new_listings.csv --no-geo
+
+## CSV encoding
+
+If you open CSVs in Excel and see broken Serbian characters, import the file as UTF-8 (65001). The project reads and writes UTF-8 by default.

@@ -27,6 +27,38 @@ def parse_area_m2(value) -> float | None:
         return None
 
 
+
+def parse_floor(value) -> float | None:
+    """Parse floor values such as 'Prizemlje', 'Visoko prizemlje', 'Suteren', '3', '3.0'."""
+    if pd.isna(value):
+        return None
+    s = str(value).strip().lower()
+    if s == "":
+        return None
+
+    mapping = {
+        "prizemlje": 0.0,
+        "visoko prizemlje": 0.5,
+        "suteren": -1.0,
+    }
+    if s in mapping:
+        return mapping[s]
+
+    # Common variants
+    if "prizemlje" in s:
+        return 0.0
+    if "suteren" in s:
+        return -1.0
+
+    m = re.search(r"-?\d+(?:[.,]\d+)?", s)
+    if not m:
+        return None
+    num = m.group(0).replace(",", ".")
+    try:
+        return float(num)
+    except ValueError:
+        return None
+
 def parse_int01(value) -> int | None:
     if pd.isna(value):
         return None
@@ -161,13 +193,13 @@ def clean_dataset(
     out = out[out["area_m2"] > 0].copy()
 
     out["rooms"] = pd.to_numeric(out[rooms_col], errors="coerce")
-    out["floor"] = pd.to_numeric(out[floor_col], errors="coerce")
+    out["floor"] = out[floor_col].apply(parse_floor)
 
     out["lift"] = out[lift_col].apply(parse_int01)
     out["parking"] = out[parking_col].apply(parse_int01)
     out["optical_internet"] = out[optical_col].apply(parse_int01)
 
-    out["state"] = out[state_col].apply(normalize_text)
+    out["state"] = out[state_col].apply(normalize_text).fillna("unknown")
     out["street_raw"] = out[location_col]
     out["street"] = out[location_col].apply(normalize_location)
 
