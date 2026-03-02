@@ -43,21 +43,24 @@ def train_models(
 
     strat = _stratify_bins(y, bins=10)
     X_train, X_test, y_train, y_test = train_test_split(
-        X, y,
+        X,
+        y,
         test_size=test_size,
         random_state=random_seed,
         stratify=strat,
     )
 
+    # IMPORTANT: build separate preprocess instances for each pipeline
     spec: FeatureSpec = infer_feature_spec(df)
-    preprocess = build_preprocess_pipeline(spec)
+    preprocess_rf = build_preprocess_pipeline(spec)
+    preprocess_xgb = build_preprocess_pipeline(spec)
 
     rf = RandomForestRegressor(
         random_state=random_seed,
         n_estimators=400,
         n_jobs=-1,
     )
-    rf_pipe = Pipeline(steps=[("preprocess", preprocess), ("model", rf)])
+    rf_pipe = Pipeline(steps=[("preprocess", preprocess_rf), ("model", rf)])
 
     rf_param_dist = {
         "model__n_estimators": [300, 500, 800],
@@ -87,7 +90,7 @@ def train_models(
         n_jobs=-1,
         tree_method="hist",
     )
-    xgb_pipe = Pipeline(steps=[("preprocess", preprocess), ("model", xgb)])
+    xgb_pipe = Pipeline(steps=[("preprocess", preprocess_xgb), ("model", xgb)])
 
     xgb_param_dist = {
         "model__n_estimators": [600, 900, 1200, 1600],
@@ -127,12 +130,15 @@ def train_models(
         "test_rows": int(len(X_test)),
     }
 
-    return TrainArtifacts(
-        rf_pipeline=rf_best,
-        xgb_pipeline=xgb_best,
-        rf_metrics=rf_metrics,
-        xgb_metrics=xgb_metrics,
-    ), debug
+    return (
+        TrainArtifacts(
+            rf_pipeline=rf_best,
+            xgb_pipeline=xgb_best,
+            rf_metrics=rf_metrics,
+            xgb_metrics=xgb_metrics,
+        ),
+        debug,
+    )
 
 
 def save_pipeline(pipeline: Pipeline, path: str) -> None:
