@@ -42,7 +42,7 @@ reports/
 
 *.joblib
 *.png
-*.pdf
+
 reports/*.json
 reports/*.csv
 
